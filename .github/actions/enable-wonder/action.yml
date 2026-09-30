@@ -56,23 +56,7 @@ runs:
         # Patch BUILD.bazel to declare module_outs for Kleaf
         if [ -f "BUILD.bazel" ]; then
           echo "Patching BUILD.bazel for wonder/wireless module_outs..."
-          python3 - << 'PYEOF'
-import re
-
-with open("BUILD.bazel", "r") as f:
-    content = f.read()
-
-outs_insert = '    module_outs = ["drivers/wonder/wonder.ko", "net/mac80211/mac80211.ko", "net/wireless/cfg80211.ko"],\n'
-
-for name in ["kernel_aarch64", "kernel_aarch64_16k"]:
-    pattern = rf'(name\s*=\s*"{name}",\n)'
-    if re.search(pattern, content):
-        content = re.sub(pattern, rf'\1{outs_insert}', content)
-
-with open("BUILD.bazel", "w") as f:
-    f.write(content)
-print("BUILD.bazel patched successfully with module_outs!")
-PYEOF
+          python3 "${{ github.action_path }}/patch_bazel.py"
         fi
 
         echo "Wonder driver successfully integrated into kernel tree!"
