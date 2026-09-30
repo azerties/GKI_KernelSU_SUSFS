@@ -18,6 +18,8 @@
 #include <linux/ktime.h>
 #include <net/cfg80211.h>
 #include <net/mac80211.h>
+#include <net/netlink.h>
+
 
 #define DRV_NAME "wonder"
 #define IF_NAME "mosey0"
@@ -199,7 +201,10 @@ static int wonder_vcmd_get_channel_status_report(struct wiphy *wiphy, struct wir
 	if (!skb)
 		return -ENOMEM;
 
-	nla_put_u32(skb, 1, 0);
+	if (nla_put_u32(skb, 1, 0)) {
+		kfree_skb(skb);
+		return -ENOBUFS;
+	}
 	return cfg80211_vendor_cmd_reply(skb);
 }
 
@@ -293,16 +298,17 @@ static int wonder_start(struct ieee80211_hw *hw)
 	return 0;
 }
 
-static void wonder_stop(struct ieee80211_hw *hw)
+static void wonder_stop(struct ieee80211_hw *hw, bool suspend)
 {
 	(void)hw;
+	(void)suspend;
 }
 
-static int wonder_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+static void wonder_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control, struct sk_buff *skb)
 {
 	(void)hw;
+	(void)control;
 	dev_kfree_skb_any(skb);
-	return 0;
 }
 
 static int wonder_config(struct ieee80211_hw *hw, u32 changed)
