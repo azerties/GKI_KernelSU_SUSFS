@@ -11,14 +11,15 @@ if not os.path.exists(bazel_file):
 with open(bazel_file, "r") as f:
     content = f.read()
 
-outs_insert = '    module_outs = ["drivers/wonder/wonder.ko", "net/mac80211/mac80211.ko", "net/wireless/cfg80211.ko"],\n'
+extra_modules = ' + ["drivers/wonder/wonder.ko", "net/mac80211/mac80211.ko", "net/wireless/cfg80211.ko"]'
 
-for name in ["kernel_aarch64", "kernel_aarch64_16k"]:
-    pattern = rf'(name\s*=\s*"{name}",\n)'
-    if re.search(pattern, content):
-        content = re.sub(pattern, rf'\1{outs_insert}', content)
+# common_kernel accepts module_implicit_outs, which it passes to kernel_build
+pattern = r'(module_implicit_outs\s*=\s*get_gki_modules_list\("arm64"\)\s*\+\s*get_kunit_modules_list\("arm64"\))'
+if re.search(pattern, content):
+    content = re.sub(pattern, rf'\1{extra_modules}', content)
+    print("Successfully appended wonder & wireless modules to module_implicit_outs in BUILD.bazel")
+else:
+    print("Warning: module_implicit_outs pattern not found in BUILD.bazel")
 
 with open(bazel_file, "w") as f:
     f.write(content)
-
-print(f"Successfully patched {bazel_file} with wonder/wireless module_outs!")
