@@ -112,7 +112,7 @@ static int wonder_vcmd_get_cap(struct wiphy *wiphy, struct wireless_dev *wdev,
 static int wonder_vcmd_get_if_mac_addr(struct wiphy *wiphy, struct wireless_dev *wdev,
 				       const void *data, int len)
 {
-	struct wonder_priv *priv = wiphy_priv(wiphy);
+	struct wonder_priv *priv = g_wonder_priv;
 	struct sk_buff *skb;
 
 	(void)wdev; (void)data; (void)len;
@@ -328,6 +328,35 @@ static void wonder_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vi
 	(void)hw; (void)vif;
 }
 
+static void wonder_configure_filter(struct ieee80211_hw *hw,
+				    unsigned int changed_flags,
+				    unsigned int *total_flags,
+				    u64 multicast)
+{
+	(void)hw; (void)changed_flags; (void)total_flags; (void)multicast;
+}
+
+static void wonder_wake_tx_queue(struct ieee80211_hw *hw,
+				 struct ieee80211_txq *txq)
+{
+	(void)hw; (void)txq;
+}
+
+static int wonder_start_nan(struct ieee80211_hw *hw,
+			    struct ieee80211_vif *vif,
+			    struct cfg80211_nan_conf *conf)
+{
+	(void)hw; (void)vif; (void)conf;
+	return 0;
+}
+
+static int wonder_stop_nan(struct ieee80211_hw *hw,
+			   struct ieee80211_vif *vif)
+{
+	(void)hw; (void)vif;
+	return 0;
+}
+
 static const struct ieee80211_ops wonder_mac_ops = {
 	.start = wonder_start,
 	.stop = wonder_stop,
@@ -335,6 +364,13 @@ static const struct ieee80211_ops wonder_mac_ops = {
 	.config = wonder_config,
 	.add_interface = wonder_add_interface,
 	.remove_interface = wonder_remove_interface,
+	.configure_filter = wonder_configure_filter,
+	.wake_tx_queue = wonder_wake_tx_queue,
+	.add_chanctx = ieee80211_emulate_add_chanctx,
+	.remove_chanctx = ieee80211_emulate_remove_chanctx,
+	.change_chanctx = ieee80211_emulate_change_chanctx,
+	.start_nan = wonder_start_nan,
+	.stop_nan = wonder_stop_nan,
 };
 
 static struct ieee80211_channel wonder_channels_2ghz[] = {
@@ -366,6 +402,10 @@ static int wonder_init_hw(struct wonder_priv *priv)
 	hw = ieee80211_alloc_hw_nm(sizeof(struct wonder_priv *), &wonder_mac_ops, "wonder%d");
 	if (!hw)
 		return -ENOMEM;
+
+	hw->queues = 4;
+	hw->max_rates = 4;
+	hw->max_report_rates = 4;
 
 	priv->hw = hw;
 	wiphy = hw->wiphy;
