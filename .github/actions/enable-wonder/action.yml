@@ -1,0 +1,56 @@
+name: 'Enable Google Wonder Driver'
+description: 'Injects Google Wonder mac80211 driver for Android Mosey (AirDrop) and enables cfg80211/mac80211'
+
+inputs:
+  version:
+    description: 'Kernel config version (e.g. android16-6.12)'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Patch Defconfig for Wireless & Wonder
+      uses: ./.github/actions/set-kernel-config
+      with:
+        config_list: |
+          CONFIG_CFG80211=y
+          CONFIG_CFG80211_DEFAULT_PS=y
+          CONFIG_MAC80211=y
+          CONFIG_MAC80211_RC_MINSTREL=y
+          CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+          CONFIG_MAC80211_STA_HASH_MAX_SIZE=0
+          CONFIG_LIBARC4=y
+          CONFIG_CRYPTO_LIB_ARC4=y
+          CONFIG_ANDROID_WONDER=y
+
+    - name: Inject Wonder Driver Source
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        set -euo pipefail
+        echo "Injecting Google Wonder driver into drivers/wonder..."
+        mkdir -p drivers/wonder
+        cp "${{ github.action_path }}/wonder.c" drivers/wonder/wonder.c
+        
+        cat << 'EOF' > drivers/wonder/Makefile
+        obj-$(CONFIG_ANDROID_WONDER) += wonder.o
+        EOF
+
+        cat << 'EOF' > drivers/wonder/Kconfig
+        config ANDROID_WONDER
+        	tristate "Google Wonder WiFi Virtual Device Driver"
+        	depends on MAC80211
+        	default y
+        	help
+        	  Virtual Soft-MAC driver for Google Mosey AirDrop support.
+        EOF
+
+        if [ -f drivers/Kconfig ] && ! grep -q "drivers/wonder/Kconfig" drivers/Kconfig; then
+          sed -i '/endmenu/i source "drivers/wonder/Kconfig"' drivers/Kconfig || echo 'source "drivers/wonder/Kconfig"' >> drivers/Kconfig
+        fi
+
+        if [ -f drivers/Makefile ] && ! grep -q "obj-\$(CONFIG_ANDROID_WONDER)" drivers/Makefile; then
+          echo 'obj-$(CONFIG_ANDROID_WONDER) += wonder/' >> drivers/Makefile
+        fi
+
+        echo "Wonder driver successfully integrated into kernel tree!"
