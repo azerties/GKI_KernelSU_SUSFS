@@ -12,13 +12,29 @@ runs:
           CONFIG_CGROUP_DEVICE=y
           CONFIG_CGROUP_PIDS=y
           CONFIG_CGROUP_PERF=y
-          CONFIG_HUGETLBFS=y
-          CONFIG_HUGETLB_PAGE=y
-          CONFIG_CGROUP_HUGETLB=y
-          CONFIG_BLK_DEV_THROTTLING=y
-          CONFIG_BLK_DEV_THROTTLING_LOW=y
           CONFIG_CFS_BANDWIDTH=y
           CONFIG_FAIR_GROUP_SCHED=y
+
+          # Explicitly disable configs known to hang Tensor G3 early boot / MM / UFS
+          CONFIG_HUGETLBFS=n
+          CONFIG_HUGETLB_PAGE=n
+          CONFIG_CGROUP_HUGETLB=n
+          CONFIG_BLK_DEV_THROTTLING=n
+          CONFIG_BLK_DEV_THROTTLING_LOW=n
+          CONFIG_BLK_CGROUP_PUNT_BIO=n
+          CONFIG_PADATA=n
+          CONFIG_DAMON=n
+          CONFIG_DAMON_VADDR=n
+          CONFIG_DAMON_PADDR=n
+          CONFIG_DAMON_SYSFS=n
+          CONFIG_BTRFS_FS=n
+          CONFIG_BTRFS_FS_POSIX_ACL=n
+
+          # Disable Samsung Knox-specific KDP/RKP/DEFEX for Google Pixel / generic GKI
+          CONFIG_KSU_SAMSUNG_KDP=n
+          CONFIG_KSU_SAMSUNG_RKP=n
+          CONFIG_KSU_SAMSUNG_DEFEX=n
+          CONFIG_KSU_SAMSUNG_NO_PATCH_TEXT=n
 
           # Bridge & Netfilter (Generally Necessary for Docker networking)
           CONFIG_BRIDGE_NETFILTER=y
@@ -55,12 +71,3 @@ runs:
           CONFIG_IPVTAP=y
           CONFIG_MACVLAN=y
           CONFIG_MACVTAP=y
-
-          # Storage Drivers (Btrfs)
-          CONFIG_BTRFS_FS=y
-          CONFIG_BTRFS_FS_POSIX_ACL=y
-
-          # Disable Samsung Knox-specific KDP/RKP for Google Pixel / generic GKI
-          CONFIG_KSU_SAMSUNG_KDP=n
-          CONFIG_KSU_SAMSUNG_RKP=n
-

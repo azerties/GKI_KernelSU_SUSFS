@@ -41,14 +41,25 @@ runs:
 
         echo "Processing: $key=$value"
 
-        # if config exists anywhere in file → replace it
-        if grep -q "^$key=" "$DEFCONFIG"; then
-          sed -i "s|^$key=.*|$key=$value|g" "$DEFCONFIG"
-        elif grep -q "^# $key is not set" "$DEFCONFIG"; then
-          sed -i "s|^# $key is not set|$key=$value|g" "$DEFCONFIG"
+        # if value is n, format as '# CONFIG_... is not set'
+        if [ "$value" = "n" ]; then
+          if grep -q "^$key=" "$DEFCONFIG"; then
+            sed -i "s|^$key=.*|# $key is not set|g" "$DEFCONFIG"
+          elif grep -q "^# $key is not set" "$DEFCONFIG"; then
+            :
+          else
+            echo "# $key is not set" >> "$DEFCONFIG"
+          fi
         else
-          # not present → append
-          echo "$key=$value" >> "$DEFCONFIG"
+          # if config exists anywhere in file → replace it
+          if grep -q "^$key=" "$DEFCONFIG"; then
+            sed -i "s|^$key=.*|$key=$value|g" "$DEFCONFIG"
+          elif grep -q "^# $key is not set" "$DEFCONFIG"; then
+            sed -i "s|^# $key is not set|$key=$value|g" "$DEFCONFIG"
+          else
+            # not present → append
+            echo "$key=$value" >> "$DEFCONFIG"
+          fi
         fi
       }
 
