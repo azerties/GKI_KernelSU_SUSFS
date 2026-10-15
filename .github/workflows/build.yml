@@ -410,6 +410,9 @@ jobs:
       with:
         version: ${{ inputs.version }}
 
+    - name: Enable Containers & Docker Support
+      uses: ./.github/actions/enable-containers
+
     - name: Integrate NoMount
       if: contains(inputs.feature_set, 'NoMount') || inputs.feature_set == 'All'
       uses: ./.github/actions/nomount
