@@ -131,6 +131,21 @@ runs:
           fi
         done
 
+    - name: Fix KernelSU-Next header inclusions for Linux 6.12+
+      if: inputs.flavor == 'next'
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel
+      run: |
+        # In Linux 6.12+, <linux/sched.h> no longer implicitly includes <linux/pid.h>.
+        # Upstream KernelSU-Next v3.4.2 compat/samsung_kdp.c calls task_pid_nr() without <linux/pid.h>.
+        for f in $(find . -name "samsung_kdp.c" 2>/dev/null); do
+          if [ -f "$f" ] && ! grep -q '<linux/pid.h>' "$f"; then
+            sed -i '1i #include <linux/pid.h>' "$f"
+            echo "Added <linux/pid.h> to $f"
+          fi
+        done
+
+
     - name: Disable multi-manager for ReSukiSU
       if: inputs.flavor == 'resukisu'
       uses: ./.github/actions/set-kernel-config

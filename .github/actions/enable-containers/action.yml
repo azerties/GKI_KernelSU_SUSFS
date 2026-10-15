@@ -59,3 +59,8 @@ runs:
           # Storage Drivers (Btrfs)
           CONFIG_BTRFS_FS=y
           CONFIG_BTRFS_FS_POSIX_ACL=y
+
+          # Disable Samsung Knox-specific KDP/RKP for Google Pixel / generic GKI
+          CONFIG_KSU_SAMSUNG_KDP=n
+          CONFIG_KSU_SAMSUNG_RKP=n
+
