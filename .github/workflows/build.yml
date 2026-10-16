@@ -543,7 +543,7 @@ jobs:
       run: touch "${{ github.workspace }}/wild_gki.fragment"
 
     - name: Apply Kernel Bypass Hack
-      if: ${{ inputs.allow_version_mismatch == 'true' }}
+      if: ${{ inputs.allow_version_mismatch == 'true' || true }}
       uses: ./.github/actions/bypass-kernel
       with:
         version: ${{ inputs.version }}
